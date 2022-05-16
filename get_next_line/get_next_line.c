@@ -1,17 +1,20 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
-#define BUFFER_SIZE 41
+#include <sys/types.h>
+#include <sys/stat.h>
 
 int ft_strlen(char *str)
 {
-	int i;
+	int i = 0;
 
-	i = 0;
+	if (!str)
+		return (0);
 	while (*str)
 	{
-		str++;
 		i++;
+		str++;
 	}
 	return (i);
 }
@@ -22,120 +25,114 @@ char *ft_strchr(char *str, char c)
 		return (NULL);
 	while (*str)
 	{
-		if (*str == c)
+		if(*str == c)
 			return (str);
 		str++;
 	}
-	return (NULL);
+	return (str);
 }
 
 char *ft_strjoin(char *s1, char *s2)
 {
-	int len1;
-	int len2;
+	int len1, len2;
 	char *str;
-	int i;
-	int j;
-
-	if(!*s1)
-		s1 = "";
+	int i, j;
+	len1 = 0;
+	len2 = 0;
+	// if (!*s1)
+	// {
+	// 	s1 = (char *)malloc(sizeof(char) * 1);
+	// 	s1[0] = '\0';
+	// }
 	len1 = ft_strlen(s1);
 	len2 = ft_strlen(s2);
-	str = (char *)malloc(sizeof(char) * (len1 + len2 + 1));
-	i = -1;
-	j = 0;
-	while (s1[++i])
-		str[j++] = s1[i];
-	i = -1;
-	while (s2[++i])
-		str[j++] = s2[i];
-	str[j] = '\0';
+	if(len1 + len2)
+		str = (char *)malloc(sizeof(char) * (len1 + len2 + 1));
+	i = 0;
+	j = -1;
+	while (s1[++j])
+	{
+		str[i] = s1[j];
+		i++;
+	}
+	j = -1;
+	while (s2[++j])
+	{
+		str[i] = s2[j];
+		i++;
+	}
+	// free(s1);
+	str[i] = '\0';
 	return (str);
 }
 
-char *read_line(int fd, unsigned int buf)
+// int main()
+// {
+// 	char *s1;
+// 	char s2[10] = "si i ho";
+// 	s1 = (char *)malloc(sizeof(char) * 1);
+// 	s1[0] = '\0';
+// 	char *str = ft_strjoin(s1, s2);
+// 	printf("---%s---- \n", str);
+// 	free(str);
+// 	free(s1);
+// }
+
+// int main()
+// {
+// 	char s1[10] = "";
+// 	char s2[10] = "si i ho";
+// 	char *str = ft_strjoin(s1, s2);
+// 	printf("---%s---- \n", str);
+// 	free(str);
+// 	// free(s1);
+// }
+
+char *read_line(int fd, unsigned int bs)
 {
-	char *s;
 	char *str;
 	int i;
+	char *s;
+	str = NULL;
 
-	str = (char *)malloc(sizeof(char) * buf);
+	
+	i = 0;
+	str = malloc(sizeof(char) * (bs + 1));
 	s = "";
-	i = read(fd, str, buf);
-	//printf("%d ", i);
+	i = read(fd, str, bs);
 	if (i)
-		s = ft_strjoin(s, str);
-	// s = ft_strchr(str, '\n');
-	// printf("%s \n", s);
-	// exit (1);
-	while (!ft_strchr(str, '\n') && i)
-	{
-		i = read(fd, str, buf);
-		//printf("=====%d====", i);
-		if (i < 0)
-			return (NULL);
-		if(i)
-			s = ft_strjoin(s, str);
-		//printf("%s %d\n", s, i);
-	}
+		str[i] = '\0';
+	s = ft_strjoin(s, str);
+	// printf("%d \n", ft_strchr(str, '\n')[0]);
+	// while (ft_strchr(str, '\n')[0] == '\n')
+	// {
+
+	// }
+	// if (i)
+	// printf("-----%s-----", s);
 	free (str);
 	return (s);
 }
 
-char *get_current_line(char *str)
-{
-	int i;
-	char *s;
-	i = 0;
-	while (str[i] != '\n' && str[i])
-		i++;
-	s = (char *)malloc(sizeof(char) * (i + 1));
-	i = 0;
-	while (str[i] != '\n' && str[i])
-	{
-		s[i] = str[i];
-		i++;
-	}
-	s[i] = '\0';
-	return (s);
-}
-
-void next_line(char **str)
-{
-	while (**str != '\n' && **str)
-		(*str)++;
-}
-
 char *get_next_line(int fd)
 {
-	unsigned int buf;
+	int bs;
 	static char *str;
-	char *s;
-
-	buf = BUFFER_SIZE;
-	// printf("hi");
-	if (fd < 0 && buf <= 0)
+	bs = BUFFER_SIZE;
+	if (fd < 0 && bs <= 0)
 		return (NULL);
-	str = read_line(fd, buf);
-	// printf("----%s----***", str);
-	s = get_current_line(str);
-	// printf("----%s----+++++", str);
-	next_line(&str);
-	// printf("----%s----", str);
-	return (s);
+	str = read_line(fd, bs);
+	return (str);
 }
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 int main()
 {
 	int fd;
 	char *str;
-	fd = 1;
-	fd = open("foo.txt", O_RDWR | O_CREAT ,S_IRWXU | S_IRWXG | S_IRWXO); 
-	printf("%d", fd);
+
+	fd = open("./gnlTester/files/41_with_nl", O_RDWR);
 	str = get_next_line(fd);
-	str = get_next_line(fd);
-    printf ("%s\n", str);
+	printf("-----%s-----", str);
+	free (str);
+	return (0);
 }
